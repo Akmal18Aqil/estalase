@@ -65,7 +65,12 @@ export default function POSPage() {
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'transfer' | 'ewallet' | 'card'>('cash')
     const [receivedAmount, setReceivedAmount] = useState('')
     const [processing, setProcessing] = useState(false)
-    const [lastSale, setLastSale] = useState<{ sale: Sale; items: (SaleItem & { products: Product })[] } | null>(null)
+    const [lastSale, setLastSale] = useState<{
+        sale: Sale;
+        items: (SaleItem & { products: Product })[];
+        receivedAmount?: number;
+        change?: number;
+    } | null>(null)
 
     // Printer ref
     const componentRef = useRef<HTMLDivElement>(null)
@@ -169,9 +174,14 @@ export default function POSPage() {
                     return { ...item, products: product! }
                 })
 
+                const receivedValue = parseFloat(receivedAmount) || 0
+                const changeValue = receivedValue - subtotal
+
                 setLastSale({
                     sale: result.sale,
-                    items: receiptItems
+                    items: receiptItems,
+                    receivedAmount: paymentMethod === 'cash' ? receivedValue : undefined,
+                    change: paymentMethod === 'cash' ? changeValue : undefined
                 })
 
                 // Reset and show success
@@ -218,33 +228,20 @@ export default function POSPage() {
     const change = received - subtotal
 
     return (
-        <div className="flex h-[calc(100vh-theme(spacing.4))] overflow-hidden bg-gray-50">
+        <div className="flex h-[calc(100vh-theme(spacing.4))] overflow-hidden bg-gray-50 print:h-auto print:overflow-visible print:bg-white">
             {/* Include Receipt Printer (Hidden screen, Visible Print) */}
             {lastSale && tenant && (
-                <div className="print-area hidden">
+                <div className="print-area hidden print:block print:fixed print:inset-0 print:bg-white print:z-[9999]">
                     <ReceiptPrinter
                         ref={componentRef}
                         sale={lastSale.sale}
                         items={lastSale.items}
                         tenant={tenant}
+                        receivedAmount={lastSale.receivedAmount}
+                        change={lastSale.change}
                     />
                 </div>
             )}
-
-            <style jsx global>{`
-        @media print {
-          body > *:not(.print-area) {
-            display: none !important;
-          }
-          .print-area {
-            display: block !important;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-          }
-        }
-      `}</style>
 
             {/* LEFT: Product Grid */}
             <div className="flex-1 flex flex-col min-w-0 border-r print:hidden">
@@ -414,7 +411,7 @@ export default function POSPage() {
 
             {/* Checkout Modal */}
             <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-md print:hidden">
                     <DialogHeader>
                         <DialogTitle>Metode Pembayaran</DialogTitle>
                         <DialogDescription>Total Tagihan: {formatCurrency(subtotal)}</DialogDescription>
@@ -484,7 +481,7 @@ export default function POSPage() {
 
             {/* Success Modal */}
             <Dialog open={isSuccessOpen} onOpenChange={setIsSuccessOpen}>
-                <DialogContent className="sm:max-w-sm text-center">
+                <DialogContent className="sm:max-w-sm text-center print:hidden">
                     <div className="mt-4 flex flex-col items-center space-y-4">
                         <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center">
                             <CheckCircle className="h-8 w-8 text-green-600" />
@@ -493,9 +490,25 @@ export default function POSPage() {
                         <DialogHeader>
                             <DialogTitle className="text-xl font-bold text-center">Transaksi Berhasil!</DialogTitle>
                         </DialogHeader>
-                        {paymentMethod === 'cash' && (
-                            <div className="text-gray-500">
-                                Kembalian: <span className="text-black font-bold">{formatCurrency(change)}</span>
+
+                        {lastSale && (
+                            <div className="w-full space-y-3 bg-gray-50 p-4 rounded-lg mt-2">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Total Tagihan</span>
+                                    <span className="font-bold">{formatCurrency(lastSale.sale.final_amount)}</span>
+                                </div>
+                                {lastSale.receivedAmount !== undefined && (
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Uang Diterima</span>
+                                        <span>{formatCurrency(lastSale.receivedAmount)}</span>
+                                    </div>
+                                )}
+                                {lastSale.change !== undefined && (
+                                    <div className="flex justify-between items-center border-t border-dashed border-gray-300 pt-2 mt-2">
+                                        <span className="font-medium">Kembalian</span>
+                                        <span className="text-xl font-bold text-green-600">{formatCurrency(lastSale.change)}</span>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -511,6 +524,18 @@ export default function POSPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <style jsx global>{`
+                @media print {
+                    @page {
+                        size: auto;
+                        margin: 0;
+                    }
+                    body {
+                        background-color: white;
+                    }
+                }
+            `}</style>
         </div>
     )
 }

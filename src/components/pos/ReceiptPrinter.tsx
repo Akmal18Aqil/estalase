@@ -7,23 +7,25 @@ interface ReceiptPrinterProps {
     sale: Sale
     items: (SaleItem & { products: Product })[]
     tenant: Tenant
+    receivedAmount?: number
+    change?: number
 }
 
 export const ReceiptPrinter = forwardRef<HTMLDivElement, ReceiptPrinterProps>(
-    ({ sale, items, tenant }, ref) => {
+    ({ sale, items, tenant, receivedAmount, change }, ref) => {
         const formatCurrency = (amount: number) => {
             return new Intl.NumberFormat('id-ID', {
                 style: 'currency',
                 currency: 'IDR',
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0,
-            }).format(amount)
+            }).format(amount).replace('Rp', 'Rp ')
         }
 
         const formatDate = (dateString: string) => {
             return new Date(dateString).toLocaleString('id-ID', {
-                day: 'numeric',
-                month: 'short',
+                day: '2-digit',
+                month: '2-digit',
                 year: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
@@ -31,39 +33,36 @@ export const ReceiptPrinter = forwardRef<HTMLDivElement, ReceiptPrinterProps>(
         }
 
         return (
-            <div className="hidden print:block print:w-[80mm] print:p-2 print:text-black" ref={ref}>
-                <div className="text-center mb-4">
-                    <h2 className="text-lg font-bold uppercase">{tenant.name}</h2>
-                    {tenant.address && <p className="text-xs">{tenant.address}</p>}
-                    {tenant.phone && <p className="text-xs">{tenant.phone}</p>}
+            <div ref={ref} className="bg-white text-black font-mono text-[10px] leading-tight w-[58mm] p-2 mx-auto print:mx-0">
+                {/* 58mm is standard for smaller thermal printers, 80mm for larger. 58mm is safer for generic styling. p-0 might be better but p-2 adds safe margin */}
+
+                {/* Header */}
+                <div className="text-center mb-2">
+                    <h1 className="text-sm font-bold uppercase tracking-wider mb-1">{tenant.name}</h1>
+                    <p className="whitespace-pre-wrap">{tenant.address}</p>
+                    {tenant.phone && <p>{tenant.phone}</p>}
                 </div>
 
-                <div className="border-b border-black border-dashed my-2"></div>
-
-                <div className="text-xs space-y-1 mb-2">
-                    <div className="flex justify-between">
-                        <span>No:</span>
-                        <span>{sale.invoice_number}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span>Tgl:</span>
-                        <span>{formatDate(sale.created_at)}</span>
-                    </div>
-                    {sale.customer_name && (
-                        <div className="flex justify-between">
-                            <span>Plg:</span>
-                            <span>{sale.customer_name}</span>
-                        </div>
-                    )}
+                {/* Meta */}
+                <div className="border-b border-black border-dashed my-1"></div>
+                <div className="flex justify-between">
+                    <span>{sale.invoice_number}</span>
+                    <span>{formatDate(sale.created_at)}</span>
                 </div>
+                {sale.customer_name && (
+                    <div className="flex justify-between">
+                        <span>Pelanggan:</span>
+                        <span>{sale.customer_name}</span>
+                    </div>
+                )}
+                <div className="border-b border-black border-dashed my-1"></div>
 
-                <div className="border-b border-black border-dashed my-2"></div>
-
-                <div className="text-xs space-y-2 mb-2">
+                {/* Items */}
+                <div className="space-y-2 mb-2">
                     {items.map((item) => (
                         <div key={item.id}>
-                            <div className="font-semibold">{item.products?.name || 'Produk'}</div>
-                            <div className="flex justify-between">
+                            <div className="font-bold">{item.products?.name || 'Produk'}</div>
+                            <div className="flex justify-between pl-2">
                                 <span>{item.quantity} x {formatCurrency(item.unit_price)}</span>
                                 <span>{formatCurrency(item.total_price)}</span>
                             </div>
@@ -71,31 +70,33 @@ export const ReceiptPrinter = forwardRef<HTMLDivElement, ReceiptPrinterProps>(
                     ))}
                 </div>
 
-                <div className="border-b border-black border-dashed my-2"></div>
-
-                <div className="text-xs space-y-1 mb-4">
-                    <div className="flex justify-between font-bold">
-                        <span>Total</span>
-                        <span>{formatCurrency(sale.final_amount)}</span>
-                    </div>
+                {/* Totals */}
+                <div className="border-t border-black border-dashed my-1"></div>
+                <div className="space-y-1">
                     <div className="flex justify-between">
-                        <span>Tunai</span>
-                        <span>{formatCurrency(sale.total_amount)}</span>
-                        {/* Note: In a real scenario we might track exact cash received properly if available, 
-                for now assuming simple display. If 'total_amount' is used for subtotal, 
-                we might need to adjust logic based on exact data structure usage. 
-                Using final_amount as Total. 
-            */}
+                        <span>Total</span>
+                        <span className="font-bold text-xs">{formatCurrency(sale.final_amount)}</span>
                     </div>
-                    {/* We assume sale.total_amount usually stores subtotal before discount? 
-              Actually schema says: total_amount, discount_amount, final_amount. 
-              Let's stick to showing Total. 
-          */}
-                </div>
 
-                <div className="text-center text-xs mt-4">
-                    <p>Terima Kasih</p>
-                    <p>Selamat Belanja Kembali</p>
+                    <div className="flex justify-between">
+                        <span>Bayar (Tunai)</span>
+                        <span>{formatCurrency(receivedAmount !== undefined ? receivedAmount : sale.total_amount)}</span>
+                    </div>
+
+                    {change !== undefined && (
+                        <div className="flex justify-between">
+                            <span>Kembali</span>
+                            <span>{formatCurrency(change)}</span>
+                        </div>
+                    )}
+                </div>
+                <div className="border-b border-black border-dashed my-1"></div>
+
+                {/* Footer */}
+                <div className="text-center mt-4 mb-8">
+                    <p className="font-bold">*** TERIMA KASIH ***</p>
+                    <p>Barang yang sudah dibeli</p>
+                    <p>tidak dapat ditukar kembali</p>
                 </div>
             </div>
         )
