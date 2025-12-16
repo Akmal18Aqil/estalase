@@ -29,7 +29,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
                 <Store className="h-8 w-8 text-white" />
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">POS UMKM</h1>
+            <h1 className="text-3xl font-bold text-gray-900">estalase</h1>
             <p className="text-gray-600 mt-2">Sistem Kasir untuk Usaha Anda</p>
           </div>
 
@@ -47,7 +47,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
                   Please configure your Supabase credentials in the environment variables to use this application.
                 </AlertDescription>
               </Alert>
-              
+
               <div className="mt-4 space-y-2 text-sm text-gray-600">
                 <p><strong>Required variables:</strong></p>
                 <ul className="list-disc list-inside space-y-1">
@@ -67,6 +67,8 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!supabase) return
+
     setLoading(true)
     setError(null)
 
@@ -91,6 +93,8 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!supabase) return
+
     setLoading(true)
     setError(null)
 
@@ -124,7 +128,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
       })
 
       if (error) throw error
-      
+
       setError(null)
       alert('Pendaftaran berhasil! Silakan cek email untuk verifikasi.')
     } catch (error: any) {
@@ -143,7 +147,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
               <Store className="h-8 w-8 text-white" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">POS UMKM</h1>
+          <h1 className="text-3xl font-bold text-gray-900">estalase</h1>
           <p className="text-gray-600 mt-2">Sistem Kasir untuk Usaha Anda</p>
         </div>
 
@@ -299,7 +303,7 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
         </Card>
 
         <p className="text-center text-sm text-gray-600 mt-6">
-          © 2024 POS UMKM. Semua hak dilindungi.
+          © 2024 estalase. Semua hak dilindungi.
         </p>
       </div>
     </div>

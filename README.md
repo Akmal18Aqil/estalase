@@ -1,4 +1,8 @@
-# SaaS POS UMKM Multi-Tenant dengan Supabase
+# estalase
+
+![Tampilan Aplikasi](public/aplikasi.png)
+
+SaaS POS UMKM Multi-Tenant dengan Supabase
 
 Aplikasi Point of Sale (POS) untuk UMKM dengan arsitektur Multi-Tenant menggunakan Supabase.
 

@@ -15,16 +15,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "POS UMKM",
-  description: "POS UMKM",
-  keywords: ["POS UMKM", "POS", "UMKM"],
+  title: "estalase",
+  description: "estalase POS",
+  keywords: ["estalase", "POS", "UMKM"],
   authors: [{ name: "Z.ai Team" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/favicon.png",
   },
   openGraph: {
-    title: "POS UMKM",
-    description: "POS UMKM",
+    title: "estalase",
+    description: "estalase POS",
     url: "https://chat.z.ai",
     siteName: "Z.ai",
     type: "website",
