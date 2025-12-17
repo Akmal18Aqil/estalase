@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Store, Mail, Lock, User, AlertTriangle } from 'lucide-react'
+import { signup } from '@/app/auth/actions'
 
 interface AuthFormProps {
   onSuccess?: () => void
@@ -117,17 +118,12 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: name,
-          }
-        }
-      })
+      // Use Server Action for signup to ensure proper PKCE cookie handling
+      const result = await signup(formData)
 
-      if (error) throw error
+      if (result.error) {
+        throw new Error(result.error)
+      }
 
       setError(null)
       alert('Pendaftaran berhasil! Silakan cek email untuk verifikasi.')
