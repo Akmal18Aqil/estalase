@@ -3,6 +3,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { getSiteUrl } from '@/lib/utils'
 
 export async function signup(formData: FormData) {
     const email = formData.get('email') as string
@@ -41,7 +42,7 @@ export async function signup(formData: FormData) {
     // Get the origin for the redirect
     // Note: In development localhost, headers.get('origin') works
     // In production behind proxy, might need logic similar to the callback route
-    const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const origin = getSiteUrl()
 
     const { error } = await supabase.auth.signUp({
         email,
